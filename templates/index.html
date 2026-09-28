@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Shadow Detection and Removal
+    </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static',
+          filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>
+        Shadow Detection and Removal
+    </h1>
+
+    <p>
+        In Outdoor Images using OpenCV
+    </p>
+
+</header>
+
+
+<nav>
+
+    <a href="#home">Home</a>
+
+    <a href="#objective">Objective</a>
+
+    <a href="#upload">Upload</a>
+
+    <a href="#results">Results</a>
+
+    <a href="#histogram">Histogram</a>
+
+    <a href="#metrics">Performance</a>
+
+    <a href="#filters">Filters</a>
+
+    <a href="#references">References</a>
+
+</nav>
+
+
+<section id="home" class="hero">
+
+    <h2>
+        Automatic Shadow Detection and Removal
+    </h2>
+
+    <p>
+        An OpenCV-based image processing system
+        for detecting and reducing shadows in
+        outdoor images.
+    </p>
+
+    <div class="workflow">
+
+        <div>Input Image</div>
+
+        <span>→</span>
+
+        <div>Preprocessing</div>
+
+        <span>→</span>
+
+        <div>Shadow Detection</div>
+
+        <span>→</span>
+
+        <div>Shadow Mask</div>
+
+        <span>→</span>
+
+        <div>Shadow Removal</div>
+
+        <span>→</span>
+
+        <div>Output</div>
+
+    </div>
+
+</section>
+
+
+<section id="objective" class="section">
+
+    <h2>Project Objective</h2>
+
+    <p>
+        The objective of this project is to detect
+        shadows present in outdoor images and reduce
+        their effect while preserving important
+        objects, edges and image details.
+    </p>
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h3>Input</h3>
+
+            <p>
+                Outdoor image containing shadows.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Processing</h3>
+
+            <p>
+                Color conversion, shadow detection,
+                filtering, morphological processing
+                and brightness correction.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Output</h3>
+
+            <p>
+                Image with reduced shadow effect.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section id="upload" class="section">
+
+    <h2>Upload Outdoor Image</h2>
+
+    <form method="POST"
+          enctype="multipart/form-data">
+
+        <input type="file"
+               name="image"
+               accept="image/*"
+               required>
+
+        <button type="submit">
+            Detect & Remove Shadow
+        </button>
+
+    </form>
+
+    {% if error %}
+
+    <div class="error">
+        {{ error }}
+    </div>
+
+    {% endif %}
+
+</section>
+
+
+{% if data %}
+
+<section id="results" class="section">
+
+    <h2>Image Processing Results</h2>
+
+    <div class="image-grid">
+
+        <div class="image-card">
+
+            <h3>Original Image</h3>
+
+            <img src="data:image/png;base64,
+            {{ data.original }}">
+
+        </div>
+
+
+        <div class="image-card">
+
+            <h3>Shadow Mask</h3>
+
+            <img src="data:image/png;base64,
+            {{ data.mask }}">
+
+        </div>
+
+
+        <div class="image-card">
+
+            <h3>Shadow Removed Image</h3>
+
+            <img src="data:image/png;base64,
+            {{ data.output }}">
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section id="histogram" class="section">
+
+    <h2>Histogram Analysis</h2>
+
+    <p>
+        The histogram represents the distribution
+        of pixel intensity values from 0 to 255.
+    </p>
+
+    <div class="chart-container">
+
+        <canvas id="histogramChart"></canvas>
+
+    </div>
+
+</section>
+
+
+<section id="metrics" class="section">
+
+    <h2>Performance Metrics</h2>
+
+    <div class="metrics-grid">
+
+        <div class="metric">
+
+            <h3>Accuracy</h3>
+
+            <p>
+                {{ "%.2f"|format(data.metrics.accuracy) }}%
+            </p>
+
+        </div>
+
+
+        <div class="metric">
+
+            <h3>Precision</h3>
+
+            <p>
+                {{ "%.2f"|format(data.metrics.precision) }}%
+            </p>
+
+        </div>
+
+
+        <div class="metric">
+
+            <h3>Recall</h3>
+
+            <p>
+                {{ "%.2f"|format(data.metrics.recall) }}%
+            </p>
+
+        </div>
+
+
+        <div class="metric">
+
+            <h3>F1 Score</h3>
+
+            <p>
+                {{ "%.2f"|format(data.metrics.f1) }}%
+            </p>
+
+        </div>
+
+
+        <div class="metric">
+
+            <h3>IoU</h3>
+
+            <p>
+                {{ "%.2f"|format(data.metrics.iou) }}%
+            </p>
+
+        </div>
+
+
+        <div class="metric">
+
+            <h3>MAE</h3>
+
+            <p>
+                {{ "%.4f"|format(data.metrics.mae) }}
+            </p>
+
+        </div>
+
+
+        <div class="metric">
+
+            <h3>MSE</h3>
+
+            <p>
+                {{ "%.4f"|format(data.metrics.mse) }}
+            </p>
+
+        </div>
+
+
+        <div class="metric">
+
+            <h3>PSNR</h3>
+
+            <p>
+                {{ "%.2f"|format(data.metrics.psnr) }}
+                dB
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="warning">
+
+        <strong>Note:</strong>
+
+        Accuracy, Precision, Recall, F1 and IoU
+        require a ground-truth shadow mask for
+        scientifically valid evaluation.
+
+        The values displayed here are estimated
+        from the detected mask because no
+        ground-truth mask is provided.
+
+    </div>
+
+</section>
+
+{% endif %}
+
+
+<section id="filters" class="section">
+
+    <h2>Filters Used</h2>
+
+    <table>
+
+        <tr>
+
+            <th>Filter</th>
+
+            <th>Kernel Size</th>
+
+            <th>Purpose</th>
+
+        </tr>
+
+        <tr>
+
+            <td>Gaussian Filter</td>
+
+            <td>5 × 5</td>
+
+            <td>
+                Smooths image and reduces noise
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>Median Filter</td>
+
+            <td>5 × 5</td>
+
+            <td>
+                Removes impulse noise
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>Bilateral Filter</td>
+
+            <td>9 × 9</td>
+
+            <td>
+                Reduces noise while preserving edges
+            </td>
+
+        </tr>
+
+    </table>
+
+</section>
+
+
+<section class="section">
+
+    <h2>Noise Analysis</h2>
+
+    <p>
+        Noise can be introduced due to camera
+        sensors, low-light conditions, compression
+        and outdoor environmental conditions.
+    </p>
+
+    <table>
+
+        <tr>
+
+            <th>Kernel Size</th>
+
+            <th>Effect</th>
+
+        </tr>
+
+        <tr>
+
+            <td>3 × 3</td>
+
+            <td>
+                Preserves fine details
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>5 × 5</td>
+
+            <td>
+                Balanced smoothing
+            </td>
+
+        </tr>
+
+        <tr>
+
+            <td>7 × 7</td>
+
+            <td>
+                Stronger smoothing but may
+                remove details
+            </td>
+
+        </tr>
+
+    </table>
+
+</section>
+
+
+<section class="section">
+
+    <h2>Kernel Size</h2>
+
+    <p>
+        Kernel size determines the neighborhood
+        of pixels used during filtering and
+        morphological operations.
+    </p>
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h3>3 × 3</h3>
+
+            <p>
+                Less smoothing and better detail
+                preservation.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>5 × 5</h3>
+
+            <p>
+                Recommended balanced kernel size
+                for this project.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>7 × 7</h3>
+
+            <p>
+                More smoothing but possible
+                loss of image details.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="section">
+
+    <h2>Morphological Operations</h2>
+
+    <div class="formula">
+
+        Opening = Erosion → Dilation
+
+    </div>
+
+    <p>
+        Opening removes small unwanted regions
+        from the shadow mask.
+    </p>
+
+    <div class="formula">
+
+        Closing = Dilation → Erosion
+
+    </div>
+
+    <p>
+        Closing fills small holes and connects
+        nearby regions.
+    </p>
+
+</section>
+
+
+<section class="section">
+
+    <h2>Mathematical Formulas</h2>
+
+    <div class="formula">
+
+        Accuracy =
+        (TP + TN) / (TP + TN + FP + FN)
+
+    </div>
+
+    <div class="formula">
+
+        Precision =
+        TP / (TP + FP)
+
+    </div>
+
+    <div class="formula">
+
+        Recall =
+        TP / (TP + FN)
+
+    </div>
+
+    <div class="formula">
+
+        F1 =
+        2 × Precision × Recall /
+        (Precision + Recall)
+
+    </div>
+
+    <div class="formula">
+
+        IoU =
+        TP / (TP + FP + FN)
+
+    </div>
+
+    <div class="formula">
+
+        MAE =
+        Σ|Original - Output| / N
+
+    </div>
+
+    <div class="formula">
+
+        MSE =
+        Σ(Original - Output)² / N
+
+    </div>
+
+    <div class="formula">
+
+        PSNR =
+        10 log₁₀(MAX² / MSE)
+
+    </div>
+
+</section>
+
+
+<section class="section">
+
+    <h2>Algorithm</h2>
+
+    <ol class="algorithm">
+
+        <li>
+            Read the outdoor input image.
+        </li>
+
+        <li>
+            Convert BGR image to HSV color space.
+        </li>
+
+        <li>
+            Analyze brightness/value channel.
+        </li>
+
+        <li>
+            Detect dark regions as potential
+            shadow regions.
+        </li>
+
+        <li>
+            Generate a binary shadow mask.
+        </li>
+
+        <li>
+            Apply morphological opening and
+            closing operations.
+        </li>
+
+        <li>
+            Apply Gaussian smoothing.
+        </li>
+
+        <li>
+            Increase brightness in detected
+            shadow regions.
+        </li>
+
+        <li>
+            Generate the shadow-reduced output.
+        </li>
+
+        <li>
+            Calculate performance metrics.
+        </li>
+
+    </ol>
+
+</section>
+
+
+<section class="section">
+
+    <h2>Technologies Used</h2>
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h3>Python</h3>
+
+            <p>
+                Main programming language.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>OpenCV</h3>
+
+            <p>
+                Image processing and shadow detection.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Flask</h3>
+
+            <p>
+                Web application framework.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>HTML & CSS</h3>
+
+            <p>
+                Website structure and design.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section id="references" class="section">
+
+    <h2>References</h2>
+
+    <p>
+        OpenCV Official Documentation
+    </p>
+
+    <a href="https://docs.opencv.org/"
+       target="_blank">
+
+        https://docs.opencv.org/
+
+    </a>
+
+    <p>
+        OpenCV Image Processing Documentation
+    </p>
+
+    <a href="https://docs.opencv.org/4.x/d7/da8/tutorial_table_of_content_imgproc.html"
+       target="_blank">
+
+        Image Processing using OpenCV
+
+    </a>
+
+</section>
+
+
+<footer>
+
+    <p>
+        Shadow Detection and Removal in Outdoor Images
+    </p>
+
+    <p>
+        Developed using Python, Flask and OpenCV
+    </p>
+
+</footer>
+
+
+<script>
+
+{% if data %}
+
+const originalHistogram =
+{{ data.hist_original | safe }};
+
+const outputHistogram =
+{{ data.hist_output | safe }};
+
+const labels =
+Array.from(
+    {length: 256},
+    (_, i) => i
+);
+
+
+new Chart(
+    document.getElementById(
+        "histogramChart"
+    ),
+    {
+
+        type: "line",
+
+        data: {
+
+            labels: labels,
+
+            datasets: [
+
+                {
+
+                    label:
+                    "Original Image",
+
+                    data:
+                    originalHistogram,
+
+                    borderWidth: 2,
+
+                    pointRadius: 0,
+
+                    fill: false
+
+                },
+
+                {
+
+                    label:
+                    "Shadow Removed Image",
+
+                    data:
+                    outputHistogram,
+
+                    borderWidth: 2,
+
+                    pointRadius: 0,
+
+                    fill: false
+
+                }
+
+            ]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            scales: {
+
+                x: {
+
+                    title: {
+
+                        display: true,
+
+                        text:
+                        "Pixel Intensity"
+
+                    }
+
+                },
+
+                y: {
+
+                    title: {
+
+                        display: true,
+
+                        text:
+                        "Normalized Frequency"
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+);
+
+{% endif %}
+
+</script>
+
+
+</body>
+
+</html>
